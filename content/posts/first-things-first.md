@@ -76,5 +76,57 @@ docker-compose up
 ```
 and we are up and running. 
 
-
 ### Basic AWS VPC
+
+The next thing that I need is an AWS environment that I can build as I go. 
+I plan to build this application in a way that my CI/CD pipeline can deploy code from my master branch.
+
+For my initial test VPC, I went with a very simple 2 subnet setup in the same AZ.
+For now, this is all I need to just get started and play around.
+I have one public subnet and one private.
+
+To create this VPC, I went directly to CloudFormation. 
+This is to keep as much infrastructure as possible defined in code and to utilize a lot of the benefits of what AWS has for IaC.
+
+The CloudFormation stacks that I wrote to create the VPC are too long to post here, but you could see them in my test bed project on [Github](https://github.com/justinbushy/aws_test_bed/blob/master/cloud_formation_stacks/test_vpc.yml)
+
+
+### Saving Dollars
+
+This is kind of a side note, but now that my AWS account is out of the free-tier range, I am starting to see how expensive even the smallest things can be.
+One of these expensive things is an AWS NAT Gateway.
+Just to have a NAT Gateway on 24/7 with no data costs $32/month.
+While that is a small price to pay for a managed gateway, I figured I could save some money since I won't be using this 24/7 at this point.
+
+AWS suggested a small linux instance that I manage myself for a cheaper NAT, but I thought I might be able to do something more clever for now.
+I decided to try using CloudFormation to spin up a new NAT whenever I needed one.
+It ended up being pretty straight forward:
+
+```yaml
+Resources:
+  GatewayEIP:
+    Type: AWS::EC2::EIP
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - GatewayEIP
+          - AllocationId
+      SubnetId:
+        Fn::ImportValue: 
+          !Sub "${VPCStackName}-Private-Subnet"
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Join:
+              - ""
+              - - Fn::ImportValue: !Sub "${VPCStackName}-VPCID"
+                - "-NAT"
+```
+
+The great things about using CloudFormation for this:
+- Using Managed AWS Gateway instead of managing my own
+- Deleting various resources tied to the NAT is automatic
+
+That's all I have for now, the next update will be setting up my Drone CI/CD server.

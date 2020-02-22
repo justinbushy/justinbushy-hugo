@@ -1,6 +1,6 @@
 ---
 title: "Starting a New Project"
-date: 2020-02-22T07:16:55-07:00
+date: 2020-02-20T07:16:55-07:00
 draft: false
 ---
 
