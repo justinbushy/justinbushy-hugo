@@ -1,7 +1,7 @@
 ---
 title: "First Things First"
 date: 2020-02-22T07:54:19-07:00
-draft: true
+draft: false
 ---
 
 ### Containerize It
